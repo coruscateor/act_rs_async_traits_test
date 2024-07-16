@@ -19,6 +19,7 @@ dependencies = [
  "act_rs",
  "async-trait",
  "corlib",
+ "paste",
  "tokio",
 ]
 

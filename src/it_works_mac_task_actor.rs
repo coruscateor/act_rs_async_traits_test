@@ -1,10 +1,10 @@
 use tokio::sync::mpsc::Receiver;
 
-use act_rs::{impl_mac_task_actor, tokio::{interactors::mpsc::{channel, SenderInteractor}, RuntimeTaskActor}, ActorFrontend, ActorInteractor, AsyncActorState, DroppedIndicator, HasInteractor};
+use act_rs::{impl_mac_task_actor, tokio::io::mpsc::{UnboundedActorIOClient, UnboundedActorIOServer, unbounded_actor_io}, ActorFrontend, AsyncActorState};
 
 use async_trait::async_trait;
 
-use crate::{BigWorkJob, WorkJob, ItWorksTaskActorState, ItWorksTaskActor};
+use crate::{WorkJob, ItWorksTaskActorState}; //, ItWorksTaskActor};
 
 use corlib::{Invalid, NonOption};
 
@@ -12,71 +12,67 @@ use std::sync::Arc;
 
 use tokio::runtime::{Runtime, Handle};
 
+use paste::paste;
+
+use tokio::task::JoinHandle;
+
 pub struct ItWorksMacTaskActorState
 {
 
-    sender: SenderInteractor<BigWorkJob>,
-    reciver: Receiver<BigWorkJob>,
-    no_inner_actor: NonOption<ItWorksTaskActor>
+    actor_io_server: UnboundedActorIOServer<WorkJob, String>
+
 }
 
 impl ItWorksMacTaskActorState
 {
 
-    pub fn new() -> Self
+    pub fn new(actor_io_server: UnboundedActorIOServer<WorkJob, String>) -> Self
     {
-
-        let (sender, reciver) = channel(5);
 
         Self
         {
 
-            sender,
-            reciver,
-            no_inner_actor: NonOption::invalid()
+            actor_io_server
 
         }
 
     }
 
-}
-
-impl HasInteractor<SenderInteractor<BigWorkJob>> for ItWorksMacTaskActorState
-{
-
-    fn interactor(&self) -> &SenderInteractor<BigWorkJob>
+    pub fn spawn() -> UnboundedActorIOClient<WorkJob, String>
     {
 
-        &self.sender
-        
+        let (actor_io_client, actor_io_server) = unbounded_actor_io();
+
+        ItWorksMacTaskActor::spawn(ItWorksMacTaskActorState::new(actor_io_server));
+
+        actor_io_client
+
     }
 
 }
 
 #[async_trait]
-impl AsyncActorState<SenderInteractor<BigWorkJob>> for ItWorksMacTaskActorState
+impl AsyncActorState for ItWorksMacTaskActorState
 {
 
-    async fn on_enter_async(&mut self, di: &DroppedIndicator) -> bool
+    async fn run_async(&mut self) -> bool
     {
 
-        let inner_actor_state = ItWorksTaskActorState::new();
-
-        self.no_inner_actor.set(ItWorksTaskActor::new(inner_actor_state));
-
-        di.not_dropped()
-
-    }
-
-    async fn run_async(&mut self, di: &DroppedIndicator) -> bool
-    {
-
-        if let Some(res) = self.reciver.recv().await
+        if let Some(res) = self.actor_io_server.input_receiver().recv().await
         {
 
             match res
             {
                 
+                WorkJob::NoJob => {},
+                WorkJob::DoesItWork => //sender) =>
+                {
+
+                    let _ = self.actor_io_server.output_sender().send("It Works!".to_string());  //sender.send("Inner: It Works!".to_string());
+
+                }
+
+                /* 
                 BigWorkJob::NoJob => {},
                 BigWorkJob::DoesItWork(sender) =>
                 {
@@ -96,15 +92,18 @@ impl AsyncActorState<SenderInteractor<BigWorkJob>> for ItWorksMacTaskActorState
                     res.expect("Error: This BigWorkJob::InnerDoesItWork didn't work.");
 
                 }
+                */
 
             }
 
+            return true;
+
         }
 
-        di.not_dropped()
+        false
 
     }
 
 }
 
-impl_mac_task_actor!(ItWorksMacTaskActorState, SenderInteractor<BigWorkJob>, ItWorksMacTaskActor);
+impl_mac_task_actor!(ItWorksMacTaskActor);

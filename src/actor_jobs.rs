@@ -6,10 +6,11 @@ pub enum WorkJob
 
     #[default]
     NoJob,
-    DoesItWork(Sender<String>)
+    DoesItWork
 
 }
 
+/*
 #[derive(Default)]
 pub enum BigWorkJob
 {
@@ -20,6 +21,7 @@ pub enum BigWorkJob
     InnerDoesItWork(Sender<String>)
 
 }
+*/
 
 //Watch for casing:
 

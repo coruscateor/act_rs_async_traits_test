@@ -1,6 +1,6 @@
 use tokio::sync::mpsc::Receiver;
 
-use act_rs::{tokio::{interactors::mpsc::{channel, SenderInteractor}, TaskActor}, ActorFrontend, ActorInteractor, AsyncActorState, DroppedIndicator, HasInteractor};
+use act_rs::{impl_mac_task_actor, tokio::{io::mpsc::{unbounded_actor_io, UnboundedActorIOClient, UnboundedActorIOServer}, TaskActor}, ActorFrontend, AsyncActorState};
 
 use async_trait::async_trait;
 
@@ -9,74 +9,67 @@ use crate::WorkJob;
 pub struct ItWorksTaskActorState
 {
 
-    sender: SenderInteractor<WorkJob>,
-    reciver: Receiver<WorkJob>
+    actor_io_server: UnboundedActorIOServer<WorkJob, String>
 
 }
 
 impl ItWorksTaskActorState
 {
 
-    pub fn new() -> Self
+    pub fn new(actor_io_server: UnboundedActorIOServer<WorkJob, String>) -> Self
     {
-
-        let (sender, reciver) = channel(5);
 
         Self
         {
 
-            sender,
-            reciver
+            actor_io_server
 
         }
 
     }
 
-}
-
-impl HasInteractor<SenderInteractor<WorkJob>> for ItWorksTaskActorState
-{
-
-    fn interactor(&self) -> &SenderInteractor<WorkJob>
+    pub fn spawn() -> UnboundedActorIOClient<WorkJob, String>
     {
 
-        &self.sender
-        
+        let (actor_io_client, actor_io_server) = unbounded_actor_io();
+
+        TaskActor::spawn(ItWorksTaskActorState::new(actor_io_server));
+
+        actor_io_client
+
     }
 
 }
 
 #[async_trait]
-impl AsyncActorState<SenderInteractor<WorkJob>> for ItWorksTaskActorState
+impl AsyncActorState for ItWorksTaskActorState
 {
 
-    async fn run_async(&mut self, di: &DroppedIndicator) -> bool
+    async fn run_async(&mut self) -> bool
     {
 
-        if let Some(res) = self.reciver.recv().await
+        if let Some(res) = self.actor_io_server.input_receiver().recv().await
         {
 
             match res
             {
 
                 WorkJob::NoJob => {},
-                WorkJob::DoesItWork(sender) =>
+                WorkJob::DoesItWork => //(sender) =>
                 {
 
-                    let _ = sender.send("Inner: It Works!".to_string());
+                    let _ = self.actor_io_server.output_sender().send("It Works!".to_string()); //sender.send("Inner: It Works!".to_string());
 
                 }
                 
             }
 
+            return true;
+
         }
 
-        di.not_dropped()
+        false
 
     }
 
 }
-
-pub type ItWorksTaskActor = TaskActor<ItWorksTaskActorState, SenderInteractor<WorkJob>>;
-
-
