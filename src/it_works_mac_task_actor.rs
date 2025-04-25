@@ -1,6 +1,8 @@
-use tokio::sync::mpsc::Receiver;
+//use tokio::sync::mpsc::Receiver;
 
-use act_rs::{impl_mac_task_actor, tokio::io::mpsc::{UnboundedActorIOClient, UnboundedActorIOServer, unbounded_actor_io}, ActorFrontend, AsyncActorState};
+//use act_rs::{impl_mac_task_actor, tokio::io::mpsc::{UnboundedActorIOClient, UnboundedActorIOServer, unbounded_actor_io}, ActorFrontend, AsyncActorState};
+
+use act_rs::{impl_mac_task_actor, ActorStateAsync};
 
 use async_trait::async_trait;
 
@@ -16,17 +18,21 @@ use paste::paste;
 
 use tokio::task::JoinHandle;
 
+use libsync::crossbeam::mpmc::tokio::seg_queue::{Sender, Receiver, io_channels::{IOClient, IOServer, io_channels}};
+
 pub struct ItWorksMacTaskActorState
 {
 
-    actor_io_server: UnboundedActorIOServer<WorkJob, String>
+    actor_io_server: IOServer<WorkJob, String>
+
+    //actor_io_server: UnboundedActorIOServer<WorkJob, String>
 
 }
 
 impl ItWorksMacTaskActorState
 {
 
-    pub fn new(actor_io_server: UnboundedActorIOServer<WorkJob, String>) -> Self
+    pub fn new(actor_io_server: IOServer<WorkJob, String>) -> Self //UnboundedActorIOServer<WorkJob, String>) -> Self
     {
 
         Self
@@ -38,10 +44,10 @@ impl ItWorksMacTaskActorState
 
     }
 
-    pub fn spawn() -> UnboundedActorIOClient<WorkJob, String>
+    pub fn spawn() -> IOClient<WorkJob, String> //UnboundedActorIOClient<WorkJob, String>
     {
 
-        let (actor_io_client, actor_io_server) = unbounded_actor_io();
+        let (actor_io_client, actor_io_server) = io_channels(); //unbounded_actor_io();
 
         ItWorksMacTaskActor::spawn(ItWorksMacTaskActorState::new(actor_io_server));
 
@@ -52,7 +58,7 @@ impl ItWorksMacTaskActorState
 }
 
 #[async_trait]
-impl AsyncActorState for ItWorksMacTaskActorState
+impl ActorStateAsync for ItWorksMacTaskActorState //AsyncActorState
 {
 
     async fn run_async(&mut self) -> bool

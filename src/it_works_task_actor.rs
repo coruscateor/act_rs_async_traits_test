@@ -1,22 +1,28 @@
-use tokio::sync::mpsc::Receiver;
+//use tokio::sync::mpsc::Receiver;
 
-use act_rs::{impl_mac_task_actor, tokio::{io::mpsc::{unbounded_actor_io, UnboundedActorIOClient, UnboundedActorIOServer}, TaskActor}, ActorFrontend, AsyncActorState};
+//use act_rs::{impl_mac_task_actor, tokio::{io::mpsc::{unbounded_actor_io, UnboundedActorIOClient, UnboundedActorIOServer}, TaskActor}, ActorFrontend, AsyncActorState};
+
+use act_rs::{impl_mac_task_actor, ActorStateAsync};
 
 use async_trait::async_trait;
 
 use crate::WorkJob;
 
+use libsync::crossbeam::mpmc::tokio::seg_queue::{Sender, Receiver, io_channels::{IOClient, IOServer, io_channels}};
+
 pub struct ItWorksTaskActorState
 {
 
-    actor_io_server: UnboundedActorIOServer<WorkJob, String>
+    actor_io_server: IOServer<WorkJob, String>
+
+    //actor_io_server: UnboundedActorIOServer<WorkJob, String>
 
 }
 
 impl ItWorksTaskActorState
 {
 
-    pub fn new(actor_io_server: UnboundedActorIOServer<WorkJob, String>) -> Self
+    pub fn new(actor_io_server: IOServer<WorkJob, String>) -> Self //UnboundedActorIOServer<WorkJob, String>) -> Self
     {
 
         Self

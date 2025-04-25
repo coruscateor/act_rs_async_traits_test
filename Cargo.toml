@@ -6,8 +6,8 @@ edition = "2021"
 [dependencies]
 #act_rs = { version = "0.2.0", features = ["tokio"] }
 act_rs = { path="../act_rs" , features = ["tokio"] }
-tokio = { version = "1.*", features = ["rt", "rt-multi-thread", "sync", "macros"] }
-async-trait = "0.1.*"
+tokio = { version = "1.44.2", features = ["rt", "rt-multi-thread", "sync", "macros"] }
+async-trait = "0.1.88"
 corlib = "0.2.0"
-paste = "1.0.*"
-
+paste = "1.0.15"
+libsync = { version = "0.2.0", features = ["crossbeam", "tokio"] }
