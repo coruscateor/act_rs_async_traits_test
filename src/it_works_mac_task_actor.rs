@@ -64,7 +64,7 @@ impl ActorStateAsync for ItWorksMacTaskActorState //AsyncActorState
     async fn run_async(&mut self) -> bool
     {
 
-        if let Some(res) = self.actor_io_server.input_receiver().recv().await
+        if let Ok(res) = self.actor_io_server.input_receiver_ref().recv().await
         {
 
             match res
@@ -74,7 +74,7 @@ impl ActorStateAsync for ItWorksMacTaskActorState //AsyncActorState
                 WorkJob::DoesItWork => //sender) =>
                 {
 
-                    let _ = self.actor_io_server.output_sender().send("It Works!".to_string());  //sender.send("Inner: It Works!".to_string());
+                    let _ = self.actor_io_server.output_sender_ref().send("It Works!".to_string());  //sender.send("Inner: It Works!".to_string());
 
                 }
 

@@ -2,7 +2,7 @@
 
 //use act_rs::{impl_mac_task_actor, tokio::{io::mpsc::{unbounded_actor_io, UnboundedActorIOClient, UnboundedActorIOServer}, TaskActor}, ActorFrontend, AsyncActorState};
 
-use act_rs::{impl_mac_task_actor, ActorStateAsync};
+use act_rs::{impl_mac_task_actor, tokio::TaskActor, ActorStateAsync};
 
 use async_trait::async_trait;
 
@@ -34,10 +34,10 @@ impl ItWorksTaskActorState
 
     }
 
-    pub fn spawn() -> UnboundedActorIOClient<WorkJob, String>
+    pub fn spawn() -> IOClient<WorkJob, String> //UnboundedActorIOClient<WorkJob, String>
     {
 
-        let (actor_io_client, actor_io_server) = unbounded_actor_io();
+        let (actor_io_client, actor_io_server) = io_channels(); //unbounded_actor_io();
 
         TaskActor::spawn(ItWorksTaskActorState::new(actor_io_server));
 
@@ -48,13 +48,13 @@ impl ItWorksTaskActorState
 }
 
 #[async_trait]
-impl AsyncActorState for ItWorksTaskActorState
+impl ActorStateAsync for ItWorksTaskActorState //AsyncActorState for ItWorksTaskActorState
 {
 
     async fn run_async(&mut self) -> bool
     {
 
-        if let Some(res) = self.actor_io_server.input_receiver().recv().await
+        if let Ok(res) = self.actor_io_server.input_receiver_ref().recv().await
         {
 
             match res
@@ -64,7 +64,7 @@ impl AsyncActorState for ItWorksTaskActorState
                 WorkJob::DoesItWork => //(sender) =>
                 {
 
-                    let _ = self.actor_io_server.output_sender().send("It Works!".to_string()); //sender.send("Inner: It Works!".to_string());
+                    let _ = self.actor_io_server.output_sender_ref().send("It Works!".to_string()); //sender.send("Inner: It Works!".to_string());
 
                 }
                 

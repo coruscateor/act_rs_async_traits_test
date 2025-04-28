@@ -1,6 +1,6 @@
 use tokio::sync::oneshot::Sender;
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub enum WorkJob
 {
 
