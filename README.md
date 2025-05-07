@@ -2,9 +2,6 @@
 
 # Act.rs Async Traits Test
 
-[![License](https://img.shields.io/badge/license-MIT%2FApache-blue)](#license)
-[![Twitch Status](https://img.shields.io/twitch/status/coruscateor)](https://www.twitch.tv/coruscateor)
-
 [X](https://twitter.com/Coruscateor) | 
 [Twitch](https://www.twitch.tv/coruscateor) | 
 [Youtube](https://www.youtube.com/@coruscateor) | 
