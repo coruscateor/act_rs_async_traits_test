@@ -1,12 +1,13 @@
 [package]
 name = "act_rs_async_traits_test"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 
 [dependencies]
-#act_rs = { version = "0.2.0", features = ["tokio"] }
-act_rs = { path="../act_rs" , features = ["tokio"] }
-tokio = { version = "1.*", features = ["rt", "rt-multi-thread", "sync", "macros"] }
-async-trait = "0.1.*"
+act_rs = { version = "0.3.0", features = ["tokio"] }
+#act_rs = { path="../act_rs" , features = ["tokio"] } # Don't remove
+tokio = { version = "1.44.2", features = ["rt", "rt-multi-thread", "sync", "macros"] }
+async-trait = "0.1.88"
 corlib = "0.2.0"
-
+paste = "1.0.15"
+libsync = { version = "0.2.0", features = ["crossbeam", "tokio"] }

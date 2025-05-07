@@ -1,8 +1,8 @@
-mod it_works_runtime_task_actor;
+//mod it_works_runtime_task_actor;
 
-use act_rs::ActorFrontend;
+//use act_rs::ActorFrontend;
 
-pub use it_works_runtime_task_actor::*;
+//pub use it_works_runtime_task_actor::*;
 
 mod actor_jobs;
 
@@ -12,9 +12,9 @@ mod it_works_task_actor;
 
 pub use it_works_task_actor::*;
 
-mod it_works_mac_runtime_task_actor;
+//mod it_works_mac_runtime_task_actor;
 
-pub use it_works_mac_runtime_task_actor::*;
+//pub use it_works_mac_runtime_task_actor::*;
 
 mod it_works_mac_task_actor;
 
@@ -22,89 +22,38 @@ pub use it_works_mac_task_actor::*;
 
 use tokio::runtime::{Builder, Runtime};
 
-use tokio::sync::oneshot::{Sender, Receiver, channel};
+//use tokio::sync::oneshot::{Sender, Receiver, channel};
 
-fn main()
+//use act_rs::tokio::io::mpsc::{UnboundedActorIOClient, UnboundedActorIOServer, unbounded_actor_io};
+
+//use act_rs::enter;
+
+#[tokio::main]
+async fn main()
 {
     
-    let tokio_runtime = Builder::new_multi_thread().enable_all().build().expect("Tokio Runtime construction failed");
+    //let tokio_runtime = Builder::new_multi_thread().enable_all().build().expect("Tokio Runtime construction failed");
 
-    println!("{}\n", "Async Trait Oriented Actors");
+    println!("ItWorksMacTaskActor");
 
-    //Initialise the actor state
+    let actor_io_client = ItWorksMacTaskActorState::spawn(); //enter!{tokio_runtime, ItWorksMacTaskActorState::spawn() };
 
-    let state = ItWorksRuntimeTaskActorState::new();
+    actor_io_client.input_sender_ref().send(WorkJob::DoesItWork).expect("Error: Sender Error");
 
-    //Create the actor
+    let res = actor_io_client.output_receiver_ref().recv().await.expect("Error: Receiver Error"); //.expect("Error: Output Receiver Lock Error").blocking_recv().expect("Error: Receiver Error");
 
-    let runtime_task_actor = ItWorksRuntimeTaskActor::from_runtime(&tokio_runtime, state);
+    println!("{}\n", res);
 
-    //Setup the oneshot channel for the WorkJob::DoesItWork message.
+    println!("ItWorksTaskActor");
 
-    let (sender, receiver) = channel();
+    let actor_io_client = ItWorksTaskActorState::spawn(); //enter!{tokio_runtime, ItWorksTaskActorState::spawn()};
 
-    //send the job message via the actors interactor.
+    actor_io_client.input_sender_ref().send(WorkJob::DoesItWork).expect("Error: Sender Error");
 
-    let res = runtime_task_actor.interactor().sender().blocking_send(BigWorkJob::DoesItWork(sender));
+    let res = actor_io_client.output_receiver_ref().recv().await.expect("Error: Receiver Error"); //("Error: Output Receiver Lock Error").blocking_recv().expect("Error: Receiver Error");
 
-    res.expect("Error: This didn't work.");
-
-    //Wait fot the result of the job and print it to the console.
-
-    let does_it_work = receiver.blocking_recv().expect("Error: Sender Error");
-
-    println!("{}\n", does_it_work);
-
-    //Big Work
-
-    println!("{}\n", "Big Work");
-
-    //new Oneshot channel 
-
-    let (sender, receiver) = channel();
-
-    let res = runtime_task_actor.interactor().sender().blocking_send(BigWorkJob::InnerDoesItWork(sender));
-
-    res.expect("Error: This didn't work.");
-
-    let inner_does_it_work = receiver.blocking_recv().expect("Error: Sender Error");
-
-    println!("{}\n", inner_does_it_work);
-
-    println!("{}\n", "Macro Generated Actors");
-
-    //like above:
-
-    let state = ItWorksMacRuntimeTaskActorState::new();
-
-    let mac_runtime_task_actor = ItWorksMacRuntimeTaskActor::from_runtime(&tokio_runtime, state);
-
-    //Initialise a single-shot channel
-
-    let (sender, receiver) = channel();
-
-    let res = mac_runtime_task_actor.interactor().sender().blocking_send(BigWorkJob::DoesItWork(sender));
-
-    res.expect("Error: This didn't work.");
-
-    let does_it_work = receiver.blocking_recv().expect("Error: Sender Error");
-
-    println!("{}\n", does_it_work);
-
-    //Big Work
-
-    println!("{}\n", "Big Work");
-
-    let (sender, receiver) = channel();
-
-    let res = mac_runtime_task_actor.interactor().sender().blocking_send(BigWorkJob::InnerDoesItWork(sender));
-
-    res.expect("Error: This didn't work.");
-
-    let inner_does_it_work = receiver.blocking_recv().expect("Error: Sender Error");
-
-    println!("{}\n", inner_does_it_work);
-
+    println!("{}\n", res);
+    
 }
 
 
